@@ -21,7 +21,7 @@ struct Ball
     sf::CircleShape sprite;
     float radius;
 
-    Ball(Vec2 position, float radius)
+    Ball(Vec2 position, float radius, sf::Color color)
     {
         this->radius = radius;
         this->position = position;
@@ -29,6 +29,7 @@ struct Ball
 
         sprite = sf::CircleShape();
         sprite.setPosition(sf::Vector2f(position.x, position.y));
+        sprite.setFillColor(color);
         sprite.setRadius(radius);
     }
 
@@ -110,6 +111,10 @@ int main()
     float angle = 0;
     bool mouseDown;
 
+    int r = 0;
+    int g = 0;
+    int b = 0;
+
     sf::Clock clock;
     while (ballsToBeSpawned > balls.size())
     {
@@ -128,12 +133,17 @@ int main()
                 mouseDown = false;
         }
 
-        if (mouseDown)
+        if (mouseDown && ballRadius != 0)
         {
             sf::Vector2i mouse = sf::Mouse::getPosition();
-            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius));
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(r, g, b)));
             cout << 1 / (dt * substeps) << endl;
+
+            r += 5;
+            g -= 2;
+            b += 10;
         }
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             ballRadius += 1;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
@@ -177,12 +187,17 @@ int main()
                 mouseDown = false;
         }
 
-        if (mouseDown)
+        if (mouseDown && ballRadius != 0)
         {
             sf::Vector2i mouse = sf::Mouse::getPosition();
-            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius));
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(r, g, b)));
             cout << 1 / (dt * substeps) << endl;
+
+            r += 5;
+            g -= 2;
+            b += 10;
         }
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             ballRadius += 1;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
