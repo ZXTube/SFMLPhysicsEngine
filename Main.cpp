@@ -15,6 +15,7 @@ using namespace std;
 
 struct Slider
 {
+    sf::RectangleShape middleRect;
     sf::RectangleShape frontRect;
     sf::RectangleShape backRect;
     float sidesOffset;
@@ -24,7 +25,7 @@ struct Slider
     float value;
     Vec2 size;
 
-    Slider(int index, float maxValue, float minValue, float startingValue)
+    Slider(int index, float maxValue, float startingValue, float minValue = 0)
     {
         this->maxValue = maxValue;
         this->minValue = minValue;
@@ -40,18 +41,25 @@ struct Slider
 
         maxWidth = size.x - sidesOffset * 2;
 
-        frontRect.setSize(sf::Vector2f(maxWidth * (value / maxValue), size.y - sidesOffset * 2));
-        frontRect.setPosition(position.x + sidesOffset, position.y + sidesOffset);
+        middleRect.setSize(sf::Vector2f(maxWidth, size.y - sidesOffset * 2));
+        middleRect.setPosition(position.x + sidesOffset, position.y + sidesOffset);
+        middleRect.setFillColor(sf::Color(100, 100, 100));
+
+        frontRect = middleRect;
+        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue) / (maxValue - minValue)), size.y - sidesOffset * 2));
         frontRect.setFillColor(sf::Color(255, 240, 31));
     }
 
-    void updateFrontRect()
+    void changeValue(float val)
     {
+        value = val;
+        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue) / (maxValue - minValue)), size.y - sidesOffset * 2));
     }
 
     void draw(sf::RenderWindow &window)
     {
         window.draw(backRect);
+        window.draw(middleRect);
         window.draw(frontRect);
     }
 };
@@ -149,7 +157,8 @@ int main()
 
     vector<Ball> balls;
     int ballsToBeSpawned = 500;
-    int ballRadius = 20;
+    int maxBallRadius = 50;
+    int ballRadius = 1;
     float radius = 300;
     float angle = 0;
     bool mouseDown;
@@ -158,10 +167,11 @@ int main()
     int g = 0;
     int b = 0;
 
-    Slider sl = Slider(0, 100, 0, 50);
+    Slider radiusSlider = Slider(0, maxBallRadius, 1);
 
+    int ballAmount = 0;
     sf::Clock clock;
-    while (ballsToBeSpawned > balls.size())
+    while (ballsToBeSpawned > ballAmount)
     {
         float dt = clock.restart().asSeconds() / substeps;
 
@@ -187,23 +197,35 @@ int main()
             r += 5;
             g -= 2;
             b += 10;
+
+            ballAmount += 1;
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && ballRadius < maxBallRadius)
+        {
             ballRadius += 1;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            radiusSlider.changeValue(ballRadius);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && ballRadius > 1)
+        {
             ballRadius -= 1;
+            radiusSlider.changeValue(ballRadius);
+        }
 
-        // balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5));
-        // balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5));
-        // radius -= 1;
-        // angle += 0.5;
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5, sf::Color(r, g, b)));
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5, sf::Color(r, g, b)));
+        radius -= 1;
+        angle += 0.5;
+        r += 5;
+        g -= 2;
+        b += 10;
+        ballAmount += 1;
 
         window.clear(sf::Color(30, 30, 30));
 
         window.draw(constraintSprite);
 
-        int ballAmount = balls.size();
+        ballAmount += 1;
 
         balls = updateBalls(balls, gravity, constraintRadius, constraintPosition, ballAmount, substeps, dt);
 
@@ -212,7 +234,7 @@ int main()
             window.draw(balls[i].sprite);
         }
 
-        sl.draw(window);
+        radiusSlider.draw(window);
 
         window.display();
     }
@@ -243,18 +265,24 @@ int main()
             r += 5;
             g -= 2;
             b += 10;
+
+            ballAmount += 1;
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && ballRadius < maxBallRadius)
+        {
             ballRadius += 1;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            radiusSlider.changeValue(ballRadius);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && ballRadius > 1)
+        {
             ballRadius -= 1;
+            radiusSlider.changeValue(ballRadius);
+        }
 
         window.clear(sf::Color(30, 30, 30));
 
         window.draw(constraintSprite);
-
-        int ballAmount = balls.size();
 
         balls = updateBalls(balls, gravity, constraintRadius, constraintPosition, ballAmount, substeps, dt);
 
@@ -262,6 +290,8 @@ int main()
         {
             window.draw(balls[i].sprite);
         }
+
+        radiusSlider.draw(window);
 
         window.display();
     }
