@@ -73,8 +73,8 @@ vector<Ball> updateBalls(vector<Ball> balls, Vec2 gravity, float constraintRadiu
                 if (absDist < combinedRadius)
                 {
                     float nudge = combinedRadius - absDist;
-                    balls[i].position += (vectorDist / absDist) * (nudge / 2);
-                    balls[j].position -= (vectorDist / absDist) * (nudge / 2);
+                    balls[i].position += (vectorDist / absDist) * (nudge / (combinedRadius / balls[j].radius));
+                    balls[j].position -= (vectorDist / absDist) * (nudge / (combinedRadius / balls[i].radius));
                 }
             }
 
@@ -105,7 +105,7 @@ int main()
 
     vector<Ball> balls;
     int ballsToBeSpawned = 500;
-    int ballRadius = 5;
+    int ballRadius = 20;
     float radius = 300;
     float angle = 0;
     bool mouseDown;
