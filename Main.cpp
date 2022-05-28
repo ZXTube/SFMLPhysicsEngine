@@ -38,7 +38,7 @@ struct Ball
 
         oldPosition = position;
 
-        position = position + velocity + acceleration * (dt * dt);
+        position = position + velocity + acceleration;
 
         acceleration = Vec2();
 
@@ -73,8 +73,8 @@ vector<Ball> updateBalls(vector<Ball> balls, Vec2 gravity, float constraintRadiu
                 if (absDist < combinedRadius)
                 {
                     float nudge = combinedRadius - absDist;
-                    balls[i].position += (vectorDist / absDist) * (nudge / 1.1);
-                    balls[j].position -= (vectorDist / absDist) * (nudge / 2.9);
+                    balls[i].position += (vectorDist / absDist) * (nudge / 2);
+                    balls[j].position -= (vectorDist / absDist) * (nudge / 2);
                 }
             }
 
@@ -93,7 +93,7 @@ int main()
     window.setFramerateLimit(60);
     sf::Event ev;
 
-    Vec2 gravity = {0, 1000};
+    Vec2 gravity = {0, 0.01};
     int substeps = 4;
 
     float constraintRadius = 450;
@@ -105,8 +105,10 @@ int main()
 
     vector<Ball> balls;
     int ballsToBeSpawned = 500;
+    int ballRadius = 5;
     float radius = 300;
     float angle = 0;
+    bool mouseDown;
 
     sf::Clock clock;
     while (ballsToBeSpawned > balls.size())
@@ -121,12 +123,21 @@ int main()
                 if (ev.key.code == sf::Keyboard::Escape)
                     return 0;
             if (ev.type == sf::Event::MouseButtonPressed)
-            {
-                sf::Vector2i mouse = sf::Mouse::getPosition();
-                balls.push_back(Ball(Vec2(mouse.x, mouse.y), 20));
-                cout << 1 / (dt * substeps) << endl;
-            }
+                mouseDown = true;
+            if (ev.type == sf::Event::MouseButtonReleased)
+                mouseDown = false;
         }
+
+        if (mouseDown)
+        {
+            sf::Vector2i mouse = sf::Mouse::getPosition();
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius));
+            cout << 1 / (dt * substeps) << endl;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+            ballRadius += 1;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            ballRadius -= 1;
 
         // balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5));
         // balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5));
@@ -161,12 +172,21 @@ int main()
                 if (ev.key.code == sf::Keyboard::Escape)
                     return 0;
             if (ev.type == sf::Event::MouseButtonPressed)
-            {
-                sf::Vector2i mouse = sf::Mouse::getPosition();
-                balls.push_back(Ball(Vec2(mouse.x, mouse.y), 20));
-                cout << 1 / (dt * substeps) << endl;
-            }
+                mouseDown = true;
+            if (ev.type == sf::Event::MouseButtonReleased)
+                mouseDown = false;
         }
+
+        if (mouseDown)
+        {
+            sf::Vector2i mouse = sf::Mouse::getPosition();
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius));
+            cout << 1 / (dt * substeps) << endl;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+            ballRadius += 1;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            ballRadius -= 1;
 
         window.clear(sf::Color(30, 30, 30));
 
