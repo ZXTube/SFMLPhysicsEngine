@@ -13,6 +13,49 @@
 
 using namespace std;
 
+struct Slider
+{
+    sf::RectangleShape frontRect;
+    sf::RectangleShape backRect;
+    float sidesOffset;
+    float maxWidth;
+    float maxValue;
+    float minValue;
+    float value;
+    Vec2 size;
+
+    Slider(int index, float maxValue, float minValue, float startingValue)
+    {
+        this->maxValue = maxValue;
+        this->minValue = minValue;
+        value = startingValue;
+
+        size = Vec2(100, 20);
+        Vec2 position = Vec2(10, 10 + ((size.y + 10) * index));
+        sidesOffset = 4;
+
+        backRect.setSize(sf::Vector2f(size.x, size.y));
+        backRect.setPosition(position.x, position.y);
+        backRect.setFillColor(sf::Color(50, 50, 50));
+
+        maxWidth = size.x - sidesOffset * 2;
+
+        frontRect.setSize(sf::Vector2f(maxWidth * (value / maxValue), size.y - sidesOffset * 2));
+        frontRect.setPosition(position.x + sidesOffset, position.y + sidesOffset);
+        frontRect.setFillColor(sf::Color(255, 240, 31));
+    }
+
+    void updateFrontRect()
+    {
+    }
+
+    void draw(sf::RenderWindow &window)
+    {
+        window.draw(backRect);
+        window.draw(frontRect);
+    }
+};
+
 struct Ball
 {
     Vec2 position;
@@ -115,6 +158,8 @@ int main()
     int g = 0;
     int b = 0;
 
+    Slider sl = Slider(0, 100, 0, 50);
+
     sf::Clock clock;
     while (ballsToBeSpawned > balls.size())
     {
@@ -166,6 +211,8 @@ int main()
         {
             window.draw(balls[i].sprite);
         }
+
+        sl.draw(window);
 
         window.display();
     }
