@@ -163,9 +163,7 @@ int main()
     float angle = 0;
     bool mouseDown;
 
-    int r = 0;
-    int g = 0;
-    int b = 0;
+    int r, g, b = 0;
 
     Slider radiusSlider = Slider(0, maxBallRadius, 1);
 
