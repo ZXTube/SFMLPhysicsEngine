@@ -137,6 +137,11 @@ vector<Ball> updateBalls(vector<Ball> balls, Vec2 gravity, float constraintRadiu
     return balls;
 }
 
+sf::Color randomColor()
+{
+    return sf::Color(rand() % 155 + 100, rand() % 155 + 100, rand() % 155 + 100);
+}
+
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(0, 0), "MY Physics Engine!", sf::Style::Titlebar | sf::Style::Close | sf::Style::Fullscreen);
@@ -163,8 +168,6 @@ int main()
     float angle = 0;
     bool mouseDown;
 
-    int r, g, b = 0;
-
     Slider radiusSlider = Slider(0, maxBallRadius, 1);
 
     int ballAmount = 0;
@@ -189,13 +192,8 @@ int main()
         if (mouseDown && ballRadius != 0)
         {
             sf::Vector2i mouse = sf::Mouse::getPosition();
-            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(r, g, b)));
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(randomColor())));
             cout << 1 / (dt * substeps) << endl;
-
-            r += 5;
-            g -= 2;
-            b += 10;
-
             ballAmount += 1;
         }
 
@@ -210,14 +208,11 @@ int main()
             radiusSlider.changeValue(ballRadius);
         }
 
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5, sf::Color(r, g, b)));
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5, sf::Color(r, g, b)));
-        radius -= 1;
-        angle += 0.5;
-        r += 5;
-        g -= 2;
-        b += 10;
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5, sf::Color(randomColor())));
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5, sf::Color(randomColor())));
         ballAmount += 1;
+        angle += 0.5;
+        radius -= 1;
 
         window.clear(sf::Color(30, 30, 30));
 
@@ -257,13 +252,8 @@ int main()
         if (mouseDown && ballRadius != 0)
         {
             sf::Vector2i mouse = sf::Mouse::getPosition();
-            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(r, g, b)));
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(randomColor())));
             cout << 1 / (dt * substeps) << endl;
-
-            r += 5;
-            g -= 2;
-            b += 10;
-
             ballAmount += 1;
         }
 
