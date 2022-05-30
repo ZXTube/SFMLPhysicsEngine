@@ -15,6 +15,8 @@ using namespace std;
 
 int maxBallRadius = 50;
 int ballRadius = 1;
+int ballAmount = 0;
+float dt;
 
 sf::RenderWindow window(sf::VideoMode(0, 0), "MY Physics Engine!", sf::Style::Close | sf::Style::Fullscreen);
 sf::Vector2u size = window.getSize();
@@ -91,13 +93,13 @@ struct Ball
         sprite.setRadius(radius);
     }
 
-    void update(float dt)
+    void update()
     {
         Vec2 velocity = position - oldPosition;
 
         oldPosition = position;
 
-        position = position + velocity + acceleration * dt;
+        position = position + velocity + acceleration;
 
         acceleration = Vec2();
 
@@ -124,9 +126,10 @@ void loop()
     constraintSprite.setFillColor(sf::Color::Black);
     constraintSprite.setRadius(constraintRadius);
 
-    int ballsToBeSpawned = 1200;
+    int ballsToBeSpawned = 1000;
+    ballAmount = ballsToBeSpawned;
     float radius = 450;
-    int substeps = 4;
+    int substeps = 1;
     float angle = 0;
 
     ballsToBeSpawned /= 2;
@@ -141,8 +144,7 @@ void loop()
     sf::Clock clock;
     while (window.isOpen())
     {
-        int ballAmount = balls.size();
-        float dt = clock.restart().asSeconds() / substeps;
+        dt = clock.restart().asSeconds();
 
         for (int _ = 0; _ < substeps; _++)
         {
@@ -174,7 +176,7 @@ void loop()
                     }
                 }
 
-                balls[i].update(dt);
+                balls[i].update();
             }
         }
     }
@@ -210,12 +212,11 @@ int main()
                 }
         }
 
-        sf::sleep(sf::milliseconds(10));
-
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && ballRadius != 0)
         {
             sf::Vector2i mouse = sf::Mouse::getPosition();
             balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(randomColor())));
+            ballAmount += 1;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && ballRadius < maxBallRadius)
         {
@@ -227,6 +228,8 @@ int main()
             ballRadius -= 1;
             radiusSlider.changeValue(ballRadius);
         }
+
+        sf::sleep(sf::seconds(dt));
 
         window.clear(sf::Color(30, 30, 30));
 
