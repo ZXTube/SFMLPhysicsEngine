@@ -14,8 +14,8 @@
 using namespace std;
 
 int maxBallRadius = 50;
-int ballRadius = 1;
 int ballAmount = 0;
+int substeps = 4;
 float dt;
 
 sf::RenderWindow window(sf::VideoMode(0, 0), "MY Physics Engine!", sf::Style::Close | sf::Style::Fullscreen);
@@ -71,6 +71,24 @@ struct Slider
         window.draw(middleRect);
         window.draw(frontRect);
     }
+
+    void add(int n)
+    {
+        if (value < maxValue)
+        {
+            value += n;
+        }
+        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue) / (maxValue - minValue)), size.y - sidesOffset * 2));
+    }
+
+    void subtract(int n)
+    {
+        if (value > minValue)
+        {
+            value -= n;
+        }
+        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue) / (maxValue - minValue)), size.y - sidesOffset * 2));
+    }
 };
 
 struct Ball
@@ -107,12 +125,20 @@ struct Ball
     }
 };
 
-vector<Ball> balls;
 Slider radiusSlider = Slider(0, maxBallRadius, 1);
+vector<Ball> balls;
 
 sf::Color randomColor()
 {
     return sf::Color(rand() % 155 + 100, rand() % 155 + 100, rand() % 155 + 100);
+}
+
+float mySqrt(float x)
+{
+    unsigned int i = *(unsigned int *)&x;
+    i += 127 << 23;
+    i >>= 1;
+    return *(float *)&i;
 }
 
 void loop()
@@ -129,7 +155,6 @@ void loop()
     int ballsToBeSpawned = 1000;
     ballAmount = ballsToBeSpawned;
     float radius = 450;
-    int substeps = 1;
     float angle = 0;
 
     ballsToBeSpawned /= 2;
@@ -154,7 +179,7 @@ void loop()
 
                 float smallerRadius = constraintRadius - balls[i].radius;
                 Vec2 vectorDistance = balls[i].position - constraintPosition;
-                float absDistance = sqrt(vectorDistance.x * vectorDistance.x + vectorDistance.y * vectorDistance.y);
+                float absDistance = mySqrt(vectorDistance.x * vectorDistance.x + vectorDistance.y * vectorDistance.y);
 
                 if (absDistance > smallerRadius)
                 {
@@ -166,7 +191,7 @@ void loop()
                 {
                     float combinedRadius = balls[i].radius + balls[j].radius;
                     Vec2 vectorDist = balls[i].position - balls[j].position;
-                    float absDist = sqrt(vectorDist.x * vectorDist.x + vectorDist.y * vectorDist.y);
+                    float absDist = mySqrt(vectorDist.x * vectorDist.x + vectorDist.y * vectorDist.y);
 
                     if (absDist < combinedRadius)
                     {
@@ -186,6 +211,8 @@ int main()
 {
     window.setFramerateLimit(60);
 
+    Vec2 gravity = {0, 0.01};
+
     float constraintRadius = 450;
     Vec2 constraintPosition = WINDOW_SIZE / 2;
     sf::CircleShape constraintSprite = sf::CircleShape();
@@ -197,6 +224,7 @@ int main()
     loop1.launch();
 
     sf::Event ev;
+    sf::Clock clock;
     while (window.isOpen())
     {
         while (window.pollEvent(ev))
@@ -212,30 +240,27 @@ int main()
                 }
         }
 
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && ballRadius != 0)
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
         {
             sf::Vector2i mouse = sf::Mouse::getPosition();
-            balls.push_back(Ball(Vec2(mouse.x, mouse.y), ballRadius, sf::Color(randomColor())));
-            ballAmount += 1;
+            balls.push_back(Ball(Vec2(mouse.x, mouse.y), radiusSlider.value, randomColor()));
+            cout << 1 / (dt) << endl;
+            ballAmount++;
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && ballRadius < maxBallRadius)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
         {
-            ballRadius += 1;
-            radiusSlider.changeValue(ballRadius);
+            radiusSlider.add(1);
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && ballRadius > 1)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
         {
-            ballRadius -= 1;
-            radiusSlider.changeValue(ballRadius);
+            radiusSlider.subtract(1);
         }
-
-        sf::sleep(sf::seconds(dt));
 
         window.clear(sf::Color(30, 30, 30));
 
         window.draw(constraintSprite);
 
-        for (int i = 0; i < balls.size(); i++)
+        for (int i = 0; i < ballAmount; i++)
         {
             window.draw(balls[i].sprite);
         }
