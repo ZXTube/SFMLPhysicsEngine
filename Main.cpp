@@ -18,7 +18,7 @@ int ballAmount = 0;
 int substeps = 4;
 sf::Time dt;
 
-sf::RenderWindow window(sf::VideoMode(0, 0), "MY Physics Engine!", sf::Style::Close | sf::Style::Fullscreen);
+sf::RenderWindow window(sf::VideoMode(0, 0), "MY Physics Engine!", sf::Style::Fullscreen);
 sf::Vector2u size = window.getSize();
 Vec2 WINDOW_SIZE = Vec2(size.x, size.y);
 
@@ -97,13 +97,20 @@ struct Ball
     Vec2 oldPosition;
     Vec2 acceleration;
     sf::CircleShape sprite;
+
+    bool isPivot;
     float radius;
 
-    Ball(Vec2 _position, float _radius, sf::Color _color)
+    Ball()
+    {
+    }
+
+    Ball(Vec2 _position, float _radius, sf::Color _color, bool _isPivot = false)
     {
         radius = _radius;
         position = _position;
         oldPosition = _position;
+        isPivot = _isPivot;
 
         sprite = sf::CircleShape();
         sprite.setPosition(sf::Vector2f(position.x, position.y));
@@ -113,6 +120,9 @@ struct Ball
 
     void update()
     {
+        if (isPivot)
+            return;
+
         Vec2 velocity = position - oldPosition;
 
         oldPosition = position;
@@ -125,6 +135,43 @@ struct Ball
     }
 };
 
+struct Link
+{
+    float targetDist;
+    Ball *objPtr1;
+    Ball *objPtr2;
+    bool pivot;
+
+    Link(Ball &object1, Ball &object2, float _targetDist)
+    {
+        targetDist = _targetDist;
+        objPtr1 = &object1;
+        objPtr2 = &object2;
+    }
+
+    void update()
+    {
+        Vec2 dist = objPtr1->position - objPtr2->position;
+        float absDist = dist.euclideanDistance();
+        Vec2 direction = dist / absDist;
+        Vec2 nudge = direction * ((targetDist - absDist) / 2);
+
+        if (objPtr1->isPivot)
+        {
+            objPtr2->position -= nudge;
+        }
+        else if (objPtr2->isPivot)
+        {
+            objPtr1->position += nudge;
+        }
+        else
+        {
+            objPtr1->position += nudge;
+            objPtr2->position -= nudge;
+        }
+    }
+};
+
 Slider radiusSlider = Slider(0, maxBallRadius, 1, 1);
 vector<Ball> tempballs;
 vector<Ball> balls;
@@ -134,14 +181,6 @@ sf::Color randomColor()
     return sf::Color(rand() % 155 + 100, rand() % 155 + 100, rand() % 155 + 100);
 }
 
-float mySqrt(float x)
-{
-    unsigned int i = *(unsigned int *)&x;
-    i += 127 << 23;
-    i >>= 1;
-    return *(float *)&i;
-}
-
 void loop()
 {
     Vec2 gravity = {0, 0.01};
@@ -149,19 +188,35 @@ void loop()
     float constraintRadius = 450;
     Vec2 constraintPosition = WINDOW_SIZE / 2;
 
-    int ballsToBeSpawned = 500;
+    int ballsToBeSpawned = 10;
     ballAmount = ballsToBeSpawned;
-    float radius = 450;
+    float radius = 440;
     float angle = 0;
 
-    ballsToBeSpawned /= 2;
+    // ballsToBeSpawned /= 2;
+    // for (int i = 0; i < ballsToBeSpawned; i++)
+    // {
+    //     balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5, sf::Color(randomColor())));
+    //     balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5, sf::Color(randomColor())));
+    //     angle += 0.1;
+    //     radius -= 0.5;
+    // }
+
     for (int i = 0; i < ballsToBeSpawned; i++)
     {
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5, sf::Color(randomColor())));
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5, sf::Color(randomColor())));
-        angle += 0.1;
-        radius -= 0.5;
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + i * 20, WINDOW_SIZE.y / 2), 10, sf::Color(randomColor())));
     }
+
+    vector<Link> links;
+
+    for (int i = 0; i < ballsToBeSpawned - 1; i++)
+    {
+        links.push_back(Link(balls[i], balls[i + 1], 30));
+    }
+
+    balls[0].isPivot = true;
+    balls[ballAmount - 1].isPivot = true;
+    int linkAmount = links.size();
 
     tempballs = balls;
 
@@ -169,6 +224,8 @@ void loop()
     while (window.isOpen())
     {
         dt = clock.restart();
+
+        sf::sleep(sf::milliseconds(10));
 
         for (int i = 0; ballAmount < tempballs.size(); i++)
         {
@@ -178,13 +235,18 @@ void loop()
 
         for (int _ = 0; _ < substeps; _++)
         {
+            for (int i = 0; i < linkAmount; i++)
+            {
+                links[i].update();
+            }
+
             for (int i = 0; i < ballAmount; i++)
             {
                 balls[i].acceleration += gravity;
 
                 float smallerRadius = constraintRadius - balls[i].radius;
                 Vec2 vectorDistance = balls[i].position - constraintPosition;
-                float absDistance = mySqrt(vectorDistance.x * vectorDistance.x + vectorDistance.y * vectorDistance.y);
+                float absDistance = vectorDistance.euclideanDistance();
 
                 if (absDistance > smallerRadius)
                     balls[i].position -= (vectorDistance / absDistance) * (absDistance - smallerRadius);
@@ -193,7 +255,7 @@ void loop()
                 {
                     float combinedRadius = balls[i].radius + balls[j].radius;
                     Vec2 vectorDist = balls[i].position - balls[j].position;
-                    float absDist = mySqrt(vectorDist.x * vectorDist.x + vectorDist.y * vectorDist.y);
+                    float absDist = vectorDist.euclideanDistance();
 
                     if (absDist < combinedRadius)
                     {
@@ -269,6 +331,9 @@ int main()
 
         window.display();
     }
+
+    delete[] & balls;
+    delete[] & tempballs;
 
     return 0;
 }

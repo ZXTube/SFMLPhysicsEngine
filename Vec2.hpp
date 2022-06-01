@@ -121,9 +121,17 @@ struct Vec2
 
 #pragma endregion Operators
 
+    float mySqrt(float x)
+    {
+        unsigned int i = *(unsigned int *)&x;
+        i += 127 << 23;
+        i >>= 1;
+        return *(float *)&i;
+    }
+
     float euclideanDistance()
     {
-        return sqrt(x * x + y * y);
+        return mySqrt(x * x + y * y);
     }
 
     void print(std::string name = "")
