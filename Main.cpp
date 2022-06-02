@@ -40,9 +40,9 @@ struct Slider
         minValue = _minValue;
         value = startingValue;
 
-        size = Vec2(100, 20);
+        size = Vec2(170, 50);
         Vec2 position = Vec2(10, 10 + ((size.y + 10) * index));
-        sidesOffset = 4;
+        sidesOffset = 10;
 
         backRect.setSize(sf::Vector2f(size.x, size.y));
         backRect.setPosition(position.x, position.y);
@@ -55,14 +55,19 @@ struct Slider
         middleRect.setFillColor(sf::Color(100, 100, 100));
 
         frontRect = middleRect;
-        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue - 1) / (maxValue - minValue - 1)), size.y - sidesOffset * 2));
         frontRect.setFillColor(sf::Color(255, 240, 31));
+        updateSprite();
+    }
+
+    void updateSprite()
+    {
+        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue + 1) / (maxValue - minValue + 1)), size.y - sidesOffset * 2));
     }
 
     void changeValue(float val)
     {
         value = val;
-        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue - 1) / (maxValue - minValue - 1)), size.y - sidesOffset * 2));
+        updateSprite();
     }
 
     void add(int n)
@@ -70,8 +75,8 @@ struct Slider
         if (value < maxValue)
         {
             value += n;
+            updateSprite();
         }
-        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue - 1) / (maxValue - minValue - 1)), size.y - sidesOffset * 2));
     }
 
     void subtract(int n)
@@ -79,8 +84,8 @@ struct Slider
         if (value > minValue)
         {
             value -= n;
+            updateSprite();
         }
-        frontRect.setSize(sf::Vector2f(maxWidth * ((value - minValue - 1) / (maxValue - minValue - 1)), size.y - sidesOffset * 2));
     }
 
     void draw(sf::RenderWindow &window)
@@ -177,35 +182,37 @@ void loop()
     float constraintRadius = 450;
     Vec2 constraintPosition = WINDOW_SIZE / 2;
 
-    int ballsToBeSpawned = 100;
+    int ballsToBeSpawned = 40;
     ballAmount = ballsToBeSpawned;
     float radius = 440;
     float angle = 0;
 
-    ballsToBeSpawned /= 2;
-    for (int i = 0; i < ballsToBeSpawned; i++)
-    {
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 15, sf::Color(randomColor())));
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 15, sf::Color(randomColor())));
-        angle += 0.1;
-        radius -= 0.5;
-    }
-
+    // ballsToBeSpawned /= 2;
     // for (int i = 0; i < ballsToBeSpawned; i++)
     // {
-    //     balls.push_back(Ball(Vec2(550 + i * 20, WINDOW_SIZE.y / 2), 10, sf::Color(randomColor())));
+    //     balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 15, sf::Color(randomColor())));
+    //     balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 15, sf::Color(randomColor())));
+    //     angle += 0.1;
+    //     radius -= 0.5;
     // }
 
-    // vector<Link> links;
+    vector<Ball> rope;
+    for (int i = 0; i < ballsToBeSpawned; i++)
+    {
+        balls.push_back(Ball(Vec2(550 + i * 20, WINDOW_SIZE.y / 2), 10, sf::Color(randomColor())));
+        rope.push_back(Ball(Vec2(550 + i * 20, WINDOW_SIZE.y / 2), 10, sf::Color(randomColor())));
+    }
 
-    // for (int i = 0; i < ballsToBeSpawned - 1; i++)
-    // {
-    //     links.push_back(Link(balls[i], balls[i + 1], 25));
-    // }
+    vector<Link> links;
 
-    // balls[0].isPivot = true;
-    // balls[ballAmount - 1].isPivot = true;
-    // int linkAmount = links.size();
+    for (int i = 0; i < ballsToBeSpawned - 1; i++)
+    {
+        links.push_back(Link(rope[i], rope[i + 1], 25));
+    }
+
+    balls[0].isPivot = true;
+    balls[ballAmount - 1].isPivot = true;
+    int linkAmount = links.size();
 
     tempballs = balls;
 
@@ -224,10 +231,10 @@ void loop()
 
         for (int _ = 0; _ < substeps; _++)
         {
-            // for (int i = 0; i < linkAmount; i++)
-            // {
-            //     links[i].update();
-            // }
+            for (int i = 0; i < linkAmount; i++)
+            {
+                links[i].update();
+            }
 
             for (int i = 0; i < ballAmount; i++)
             {
