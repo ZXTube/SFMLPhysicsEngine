@@ -121,7 +121,7 @@ struct Ball
     void update()
     {
         if (isPivot)
-            return;
+            position = oldPosition;
 
         Vec2 velocity = position - oldPosition;
 
@@ -154,21 +154,10 @@ struct Link
         Vec2 dist = objPtr1->position - objPtr2->position;
         float absDist = dist.euclideanDistance();
         Vec2 direction = dist / absDist;
-        Vec2 nudge = direction * ((targetDist - absDist) / 2);
 
-        if (objPtr1->isPivot)
-        {
-            objPtr2->position -= nudge;
-        }
-        else if (objPtr2->isPivot)
-        {
-            objPtr1->position += nudge;
-        }
-        else
-        {
-            objPtr1->position += nudge;
-            objPtr2->position -= nudge;
-        }
+        Vec2 nudge = direction * ((targetDist - absDist) / 2);
+        objPtr1->position += nudge;
+        objPtr2->position -= nudge;
     }
 };
 
