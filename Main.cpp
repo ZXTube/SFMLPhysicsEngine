@@ -113,7 +113,7 @@ struct Ball
         isPivot = _isPivot;
 
         sprite = sf::CircleShape();
-        sprite.setPosition(sf::Vector2f(position.x, position.y));
+        sprite.setPosition(sf::Vector2f(position.x - radius, position.y - radius));
         sprite.setFillColor(_color);
         sprite.setRadius(radius);
     }
@@ -177,35 +177,35 @@ void loop()
     float constraintRadius = 450;
     Vec2 constraintPosition = WINDOW_SIZE / 2;
 
-    int ballsToBeSpawned = 10;
+    int ballsToBeSpawned = 100;
     ballAmount = ballsToBeSpawned;
     float radius = 440;
     float angle = 0;
 
-    // ballsToBeSpawned /= 2;
-    // for (int i = 0; i < ballsToBeSpawned; i++)
-    // {
-    //     balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 5, sf::Color(randomColor())));
-    //     balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 5, sf::Color(randomColor())));
-    //     angle += 0.1;
-    //     radius -= 0.5;
-    // }
-
+    ballsToBeSpawned /= 2;
     for (int i = 0; i < ballsToBeSpawned; i++)
     {
-        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + i * 20, WINDOW_SIZE.y / 2), 10, sf::Color(randomColor())));
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 - cos(angle) * radius, WINDOW_SIZE.y / 2 - sin(angle) * radius), 15, sf::Color(randomColor())));
+        balls.push_back(Ball(Vec2(WINDOW_SIZE.x / 2 + cos(angle) * radius, WINDOW_SIZE.y / 2 + sin(angle) * radius), 15, sf::Color(randomColor())));
+        angle += 0.1;
+        radius -= 0.5;
     }
 
-    vector<Link> links;
+    // for (int i = 0; i < ballsToBeSpawned; i++)
+    // {
+    //     balls.push_back(Ball(Vec2(550 + i * 20, WINDOW_SIZE.y / 2), 10, sf::Color(randomColor())));
+    // }
 
-    for (int i = 0; i < ballsToBeSpawned - 1; i++)
-    {
-        links.push_back(Link(balls[i], balls[i + 1], 30));
-    }
+    // vector<Link> links;
 
-    balls[0].isPivot = true;
-    balls[ballAmount - 1].isPivot = true;
-    int linkAmount = links.size();
+    // for (int i = 0; i < ballsToBeSpawned - 1; i++)
+    // {
+    //     links.push_back(Link(balls[i], balls[i + 1], 25));
+    // }
+
+    // balls[0].isPivot = true;
+    // balls[ballAmount - 1].isPivot = true;
+    // int linkAmount = links.size();
 
     tempballs = balls;
 
@@ -219,15 +219,15 @@ void loop()
         for (int i = 0; ballAmount < tempballs.size(); i++)
         {
             balls.push_back(tempballs[ballAmount + i]);
-            ballAmount += 1;
+            ballAmount++;
         }
 
         for (int _ = 0; _ < substeps; _++)
         {
-            for (int i = 0; i < linkAmount; i++)
-            {
-                links[i].update();
-            }
+            // for (int i = 0; i < linkAmount; i++)
+            // {
+            //     links[i].update();
+            // }
 
             for (int i = 0; i < ballAmount; i++)
             {
@@ -273,6 +273,9 @@ int main()
     constraintSprite.setFillColor(sf::Color::Black);
     constraintSprite.setRadius(constraintRadius);
 
+    Ball spawningBall;
+    sf::RectangleShape spawningLine;
+
     sf::Thread loop1(&loop);
     loop1.launch();
 
@@ -282,13 +285,26 @@ int main()
         while (window.pollEvent(ev))
         {
             if (ev.type == sf::Event::Closed)
-            {
                 window.close();
-            }
             if (ev.type == sf::Event::KeyPressed)
                 if (ev.key.code == sf::Keyboard::Escape)
-                {
                     window.close();
+            if (ev.type == sf::Event::MouseButtonPressed)
+                if (ev.mouseButton.button == sf::Mouse::Right)
+                {
+                    sf::Vector2i mouse = sf::Mouse::getPosition();
+                    spawningBall = Ball(Vec2(mouse.x, mouse.y), radiusSlider.value, randomColor(), true);
+                    spawningLine.setPosition(sf::Vector2f(mouse.x, mouse.y));
+                }
+            if (ev.type == sf::Event::MouseButtonReleased)
+                if (ev.mouseButton.button == sf::Mouse::Right)
+                {
+                    spawningBall.isPivot = false;
+                    sf::Vector2i sfMouse = sf::Mouse::getPosition();
+                    Vec2 mouse = Vec2(sfMouse.x, sfMouse.y);
+                    Vec2 distance = (mouse - spawningBall.position) / 5;
+                    spawningBall.oldPosition = spawningBall.position + distance;
+                    tempballs.push_back(spawningBall);
                 }
         }
 
@@ -314,6 +330,20 @@ int main()
         for (int i = 0; i < ballAmount; i++)
         {
             window.draw(balls[i].sprite);
+        }
+        if (spawningBall.isPivot)
+        {
+            sf::Vector2i sfMouse = sf::Mouse::getPosition();
+            Vec2 mouse = Vec2(sfMouse.x, sfMouse.y);
+            Vec2 distance = mouse - spawningBall.position;
+            float absDistance = distance.euclideanDistance();
+            spawningLine.setSize(sf::Vector2f(absDistance, 3));
+
+            float angle = atan2(distance.y, distance.x);
+            spawningLine.setRotation(angle * 360 / (2 * 3.14159265358979323846));
+
+            window.draw(spawningLine);
+            window.draw(spawningBall.sprite);
         }
 
         radiusSlider.draw(window);
